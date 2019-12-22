@@ -1,0 +1,37 @@
+#!/bin/bash
+
+# Converts Google Chrome/Chromium plain text .csv password store to 'pass' format
+# The .csv file is assumed to be in the following format:
+##########################
+# name,url,username,password
+##########################
+
+# Note: special characters especially '/' and ' ' (space) in the username are unsupported.
+
+FILE="$1"
+DEST=~/.password-store/web
+PWD=/tmp
+SWAP=chrome2pass_swap
+
+rm $PWD/$SWAP*
+
+{
+  read;
+  while read line;
+  do
+    IFS=','; array=($line); unset IFS;
+    a=${array[0]}
+    b=${array[2]}
+    c=${array[3]}
+
+    if [ $b ]
+    then
+      mkdir -p $DEST/$a
+      echo $c > $PWD/$SWAP
+      gpg --default-recipient-self -e $PWD/$SWAP
+      mv $PWD/$SWAP.gpg "$DEST/$a/$b.gpg"
+    fi
+  done
+} < "$FILE"
+
+exit 0

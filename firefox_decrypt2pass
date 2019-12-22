@@ -1,0 +1,32 @@
+#!/bin/bash
+
+# Converts firefox_decrypt plain text password store to 'pass' format
+# The firefox_decrypt is assumed to be in the following format:
+##########################
+# 
+# Website: http[s]://<URL>
+# Username: '<USERNAME>'
+# Password: '<PASSWORD>'
+##########################
+
+# Note: special characters especially '/' and ' ' (space) in the username are unsupported.
+
+FILE="$1"
+DEST=~/.password-store/web
+PWD=/tmp
+SWAP=firefox_decrypt2pass_swap
+
+rm $PWD/$SWAP*
+
+while read one; read two; read three; read four
+do
+  a=$(echo $two | sed -e s/"Website: https:\/\/"// -e s/"Website: http:\/\/"//)
+  b=$(echo $three | sed -e s/"Username: "// -e s/\'//g)
+  c=$(echo $four | sed -e s/"Password: "// -e s/\'//g)
+  mkdir -p $DEST/$a
+  echo $c > $PWD/$SWAP
+  gpg --default-recipient-self -e $PWD/$SWAP
+  mv $PWD/$SWAP.gpg "$DEST/$a/$b.gpg"
+done < "$FILE"
+
+exit 0
